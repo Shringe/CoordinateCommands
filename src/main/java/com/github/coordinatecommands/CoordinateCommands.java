@@ -4,6 +4,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.fabricmc.api.ClientModInitializer;
 
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
+import net.minecraft.block.Block;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.registry.RegistryKey;
@@ -43,16 +44,13 @@ public class CoordinateCommands implements ClientModInitializer {
 					.then(argument("y", IntegerArgumentType.integer())
 						.then(argument("z", IntegerArgumentType.integer())
 							.executes(context -> {
-								ClientPlayerEntity player = MinecraftClient.getInstance().player;
-								RegistryKey<World> dimension = player.getWorld().getRegistryKey();
-
 								BlockPos position = new BlockPos(
 										IntegerArgumentType.getInteger(context, "x"),
 										IntegerArgumentType.getInteger(context, "y"),
 										IntegerArgumentType.getInteger(context, "z")
 								);
 
-								context.getSource().sendFeedback(() -> copyableText(format(getNetherCords(position, dimension)), 0x990033),false);
+								context.getSource().sendFeedback(() -> copyableText(format(getNetherCords(position, World.OVERWORLD)), 0x990033),false);
 								return 1;
 							})
 						)
@@ -72,6 +70,32 @@ public class CoordinateCommands implements ClientModInitializer {
 					.then(argument("y", IntegerArgumentType.integer())
 						.then(argument("z", IntegerArgumentType.integer())
 							.executes(context -> {
+								BlockPos position = new BlockPos(
+										IntegerArgumentType.getInteger(context, "x"),
+										IntegerArgumentType.getInteger(context, "y"),
+										IntegerArgumentType.getInteger(context, "z")
+								);
+
+								context.getSource().sendFeedback(() -> copyableText(format(getOverworldCords(position, World.NETHER)), 0x00cc00), false);
+								return 1;
+							})
+						)
+					)
+				)
+			)
+			.then(literal("reverse")
+				.executes(context -> {
+					ClientPlayerEntity player = MinecraftClient.getInstance().player;
+					BlockPos position = player.getBlockPos();
+					RegistryKey<World> dimension = player.getWorld().getRegistryKey();
+
+					context.getSource().sendFeedback(() -> copyableText(format(getReverseCords(position, dimension)), 0xcc9900), false);
+					return 1;
+				})
+				.then(argument("x", IntegerArgumentType.integer())
+					.then(argument("y", IntegerArgumentType.integer())
+						.then(argument("z", IntegerArgumentType.integer())
+							.executes(context -> {
 								ClientPlayerEntity player = MinecraftClient.getInstance().player;
 								RegistryKey<World> dimension = player.getWorld().getRegistryKey();
 
@@ -81,7 +105,7 @@ public class CoordinateCommands implements ClientModInitializer {
 										IntegerArgumentType.getInteger(context, "z")
 								);
 
-								context.getSource().sendFeedback(() -> copyableText(format(getOverworldCords(position, dimension)), 0x00cc00), false);
+								context.getSource().sendFeedback(() -> copyableText(format(getReverseCords(position, dimension)), 0xcc9900), false);
 								return 1;
 							})
 						)
@@ -116,6 +140,14 @@ public class CoordinateCommands implements ClientModInitializer {
 			return new BlockPos(pos.getX() * 8, pos.getY(), pos.getZ() * 8);
 		} else {
 			return pos;
+		}
+	}
+
+	private BlockPos getReverseCords(BlockPos pos, RegistryKey<World> dimension) {
+		if (dimension.equals(World.NETHER)) {
+			return getOverworldCords(pos, dimension);
+		} else {
+			return getNetherCords(pos, dimension);
 		}
 	}
 }
