@@ -22,7 +22,7 @@ public class CoordinateCommands implements ClientModInitializer {
 	}
 
 	private void registerCommands() {
-		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("cords")
+		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("coords")
 			.executes(context -> {
 				ClientPlayerEntity player = MinecraftClient.getInstance().player;
 				BlockPos position = player.getBlockPos();
