@@ -3,8 +3,7 @@ package com.github.coordinatecommands;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import net.fabricmc.api.ClientModInitializer;
 
-import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
-import net.minecraft.block.Block;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.registry.RegistryKey;
@@ -12,8 +11,8 @@ import net.minecraft.text.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-import static net.minecraft.server.command.CommandManager.argument;
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
+import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 import static net.minecraft.text.ClickEvent.Action.COPY_TO_CLIPBOARD;
 
 public class CoordinateCommands implements ClientModInitializer {
@@ -23,12 +22,12 @@ public class CoordinateCommands implements ClientModInitializer {
 	}
 
 	private void registerCommands() {
-		CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> dispatcher.register(literal("coords")
+		ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> dispatcher.register(literal("coords")
 			.executes(context -> {
 				ClientPlayerEntity player = MinecraftClient.getInstance().player;
 				BlockPos position = player.getBlockPos();
 
-				context.getSource().sendFeedback(() -> copyableText(format(position), 0xffffff), false);
+				context.getSource().sendFeedback(copyableText(format(position), 0xffffff));
 				return 1;
 			})
 			.then(literal("nether")
@@ -37,7 +36,7 @@ public class CoordinateCommands implements ClientModInitializer {
 					BlockPos position = player.getBlockPos();
 					RegistryKey<World> dimension = player.getWorld().getRegistryKey();
 
-					context.getSource().sendFeedback(() -> copyableText(format(getNetherCords(position, dimension)), 0x990033),false);
+					context.getSource().sendFeedback(copyableText(format(getNetherCords(position, dimension)), 0x990033));
 					return 1;
 				})
 				.then(argument("x", IntegerArgumentType.integer())
@@ -50,7 +49,7 @@ public class CoordinateCommands implements ClientModInitializer {
 										IntegerArgumentType.getInteger(context, "z")
 								);
 
-								context.getSource().sendFeedback(() -> copyableText(format(getNetherCords(position, World.OVERWORLD)), 0x990033),false);
+								context.getSource().sendFeedback(copyableText(format(getNetherCords(position, World.OVERWORLD)), 0x990033));
 								return 1;
 							})
 						)
@@ -63,7 +62,7 @@ public class CoordinateCommands implements ClientModInitializer {
 
 					BlockPos position = player.getBlockPos();
 					RegistryKey<World> dimension = player.getWorld().getRegistryKey();
-					context.getSource().sendFeedback(() -> copyableText(format(getOverworldCords(position, dimension)), 0x00cc00), false);
+					context.getSource().sendFeedback(copyableText(format(getOverworldCords(position, dimension)), 0x00cc00));
 					return 1;
 				})
 				.then(argument("x", IntegerArgumentType.integer())
@@ -76,7 +75,7 @@ public class CoordinateCommands implements ClientModInitializer {
 										IntegerArgumentType.getInteger(context, "z")
 								);
 
-								context.getSource().sendFeedback(() -> copyableText(format(getOverworldCords(position, World.NETHER)), 0x00cc00), false);
+								context.getSource().sendFeedback(copyableText(format(getOverworldCords(position, World.NETHER)), 0x00cc00));
 								return 1;
 							})
 						)
@@ -89,7 +88,7 @@ public class CoordinateCommands implements ClientModInitializer {
 					BlockPos position = player.getBlockPos();
 					RegistryKey<World> dimension = player.getWorld().getRegistryKey();
 
-					context.getSource().sendFeedback(() -> copyableText(format(getReverseCords(position, dimension)), 0xcc9900), false);
+					context.getSource().sendFeedback(copyableText(format(getReverseCords(position, dimension)), 0xcc9900));
 					return 1;
 				})
 				.then(argument("x", IntegerArgumentType.integer())
@@ -105,7 +104,7 @@ public class CoordinateCommands implements ClientModInitializer {
 										IntegerArgumentType.getInteger(context, "z")
 								);
 
-								context.getSource().sendFeedback(() -> copyableText(format(getReverseCords(position, dimension)), 0xcc9900), false);
+								context.getSource().sendFeedback(copyableText(format(getReverseCords(position, dimension)), 0xcc9900));
 								return 1;
 							})
 						)
