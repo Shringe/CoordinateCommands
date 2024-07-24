@@ -1,0 +1,4 @@
+{
+  "text.autoconfig.coordinatecommands.option.main.simpleMode": "Enable this to output extra information from commands",
+  "text.autoconfig.coordinatecommands.option.main.decimalPrecision": "Number of decimals points to output with certain commands"
+}

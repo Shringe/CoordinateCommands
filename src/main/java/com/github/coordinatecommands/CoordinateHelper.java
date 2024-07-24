@@ -4,7 +4,9 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 
-public class DistanceHelper {
+public class CoordinateHelper {
+    public ClientPlayerEntity player;
+
     private BlockPos lastPosition;
     private BlockPos currentPosition;
     public BlockPos point1;
@@ -18,24 +20,33 @@ public class DistanceHelper {
         return currentPosition;
     }
 
-    public void setCurrentPosition(BlockPos currentPosition) {
-        this.lastPosition = ;
-        this.currentPosition = currentPosition;
+    public void setNewPosition(BlockPos newPosition) {
+        this.lastPosition = currentPosition;
+        this.currentPosition = newPosition;
+    }
+
+    public void setPlayerPosition() {
+        setNewPosition(getPlayerPosition());
+    }
+
+    public BlockPos getPlayerPosition() {
+        return player.getBlockPos();
     }
 
     public double pointDistance() {
-        return point1.getSquaredDistance(point2);
+        return straightLineDistance(point1, point2);
     }
 
     public double newDistance(BlockPos newPosition) {
-        return lastPosition.getSquaredDistance(newPosition);
+        return straightLineDistance(lastPosition, currentPosition);
     }
 
-    public void getNewPosition() {
-        ClientPlayerEntity player = MinecraftClient.getInstance().player;
-
-        lastPosition = currentPosition;
-        currentPosition = player.getBlockPos();
+    public void clearPoints() {
+        this.point1 = null;
+        this.point2 = null;
     }
 
+    public static double straightLineDistance(BlockPos p1, BlockPos p2) {
+        return Math.sqrt(p1.getSquaredDistance(p2));
+    }
 }

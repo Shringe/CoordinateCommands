@@ -1,117 +1,162 @@
 package com.github.coordinatecommands;
 
+import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import me.shedaniel.autoconfig.AutoConfig;
+import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import net.fabricmc.api.ClientModInitializer;
 
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.text.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument;
 import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal;
 import static net.minecraft.text.ClickEvent.Action.COPY_TO_CLIPBOARD;
 
 public class CoordinateCommands implements ClientModInitializer {
+	public static final Logger LOGGER = LoggerFactory.getLogger("coordinatecommands");
+	public static ModConfig config;
+	private final CoordinateHelper coordinateHelper = new CoordinateHelper();
+
 	@Override
 	public void onInitializeClient() {
-		registerCommands();
+		LOGGER.atDebug();
+
+		AutoConfig.register(ModConfig.class, GsonConfigSerializer::new);
+		this.config = AutoConfig.getConfigHolder(ModConfig.class).getConfig();
+
+		ClientCommandRegistrationCallback.EVENT.register(this::initializeCommands);
 	}
 
-	private void registerCommands() {
-		ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) -> dispatcher.register(literal("coords")
-			.executes(context -> {
-				ClientPlayerEntity player = MinecraftClient.getInstance().player;
-				BlockPos position = player.getBlockPos();
+	private void initializeCommands(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandRegistryAccess registryAccess) {
+		LOGGER.info("Initializing commands");
+		if (coordinateHelper.player == null) {
+			LOGGER.debug("coordinateHelper.player is null");
+			ClientPlayerEntity player = MinecraftClient.getInstance().player;
+			if (player == null) {
+				LOGGER.debug("MinecraftClient.getInstance().player is null. returning");
+				return;
+			} else {
+				LOGGER.info("Player Initialized");
+				coordinateHelper.player = player;
+				coordinateHelper.getPlayerPosition();
+			}
+		}
 
-				context.getSource().sendFeedback(copyableText(format(position), 0xffffff));
-				return 1;
-			})
-			.then(literal("nether")
+
+		dispatcher.register(literal("coords")
 				.executes(context -> {
-					ClientPlayerEntity player = MinecraftClient.getInstance().player;
-					BlockPos position = player.getBlockPos();
-					RegistryKey<World> dimension = player.getWorld().getRegistryKey();
+					coordinateHelper.setPlayerPosition();
 
-					context.getSource().sendFeedback(copyableText(format(getNetherCords(position, dimension)), 0x990033));
+					BlockPos position = coordinateHelper.getCurrentPosition();
+					context.getSource().sendFeedback(copyableText(format(position), 0xffffff));
 					return 1;
 				})
-				.then(argument("x", IntegerArgumentType.integer())
-					.then(argument("y", IntegerArgumentType.integer())
-						.then(argument("z", IntegerArgumentType.integer())
-							.executes(context -> {
-								BlockPos position = new BlockPos(
-										IntegerArgumentType.getInteger(context, "x"),
-										IntegerArgumentType.getInteger(context, "y"),
-										IntegerArgumentType.getInteger(context, "z")
-								);
+				.then(literal("nether")
+						.executes(context -> {
+							coordinateHelper.setPlayerPosition();
 
-								context.getSource().sendFeedback(copyableText(format(getNetherCords(position, World.OVERWORLD)), 0x990033));
-								return 1;
-							})
+							BlockPos position = coordinateHelper.getCurrentPosition();
+							RegistryKey<World> dimension = MinecraftClient.getInstance().player.getWorld().getRegistryKey();
+
+							context.getSource().sendFeedback(copyableText(format(getNetherCords(position, dimension)), 0x990033));
+							return 1;
+						})
+						.then(argument("x", IntegerArgumentType.integer())
+								.then(argument("y", IntegerArgumentType.integer())
+										.then(argument("z", IntegerArgumentType.integer())
+												.executes(context -> {
+													BlockPos position = new BlockPos(
+															IntegerArgumentType.getInteger(context, "x"),
+															IntegerArgumentType.getInteger(context, "y"),
+															IntegerArgumentType.getInteger(context, "z")
+													);
+
+													context.getSource().sendFeedback(copyableText(format(getNetherCords(position, World.OVERWORLD)), 0x990033));
+													return 1;
+												})
+										)
+								)
 						)
-					)
 				)
-			)
-			.then(literal("overworld")
-				.executes(context -> {
-					ClientPlayerEntity player = MinecraftClient.getInstance().player;
+				.then(literal("overworld")
+						.executes(context -> {
+							coordinateHelper.setPlayerPosition();
 
-					BlockPos position = player.getBlockPos();
-					RegistryKey<World> dimension = player.getWorld().getRegistryKey();
-					context.getSource().sendFeedback(copyableText(format(getOverworldCords(position, dimension)), 0x00cc00));
-					return 1;
-				})
-				.then(argument("x", IntegerArgumentType.integer())
-					.then(argument("y", IntegerArgumentType.integer())
-						.then(argument("z", IntegerArgumentType.integer())
-							.executes(context -> {
-								BlockPos position = new BlockPos(
-										IntegerArgumentType.getInteger(context, "x"),
-										IntegerArgumentType.getInteger(context, "y"),
-										IntegerArgumentType.getInteger(context, "z")
-								);
+							BlockPos position = coordinateHelper.getCurrentPosition();
+							RegistryKey<World> dimension = MinecraftClient.getInstance().player.getWorld().getRegistryKey();
 
-								context.getSource().sendFeedback(copyableText(format(getOverworldCords(position, World.NETHER)), 0x00cc00));
-								return 1;
-							})
+							context.getSource().sendFeedback(copyableText(format(getOverworldCords(position, dimension)), 0x00cc00));
+							return 1;
+						})
+						.then(argument("x", IntegerArgumentType.integer())
+								.then(argument("y", IntegerArgumentType.integer())
+										.then(argument("z", IntegerArgumentType.integer())
+												.executes(context -> {
+													BlockPos position = new BlockPos(
+															IntegerArgumentType.getInteger(context, "x"),
+															IntegerArgumentType.getInteger(context, "y"),
+															IntegerArgumentType.getInteger(context, "z")
+													);
+
+													context.getSource().sendFeedback(copyableText(format(getOverworldCords(position, World.NETHER)), 0x00cc00));
+													return 1;
+												})
+										)
+								)
 						)
-					)
 				)
-			)
-			.then(literal("reverse")
-				.executes(context -> {
-					ClientPlayerEntity player = MinecraftClient.getInstance().player;
-					BlockPos position = player.getBlockPos();
-					RegistryKey<World> dimension = player.getWorld().getRegistryKey();
+				.then(literal("reverse")
+						.executes(context -> {
+							coordinateHelper.setPlayerPosition();
 
-					context.getSource().sendFeedback(copyableText(format(getReverseCords(position, dimension)), 0xcc9900));
-					return 1;
-				})
-				.then(argument("x", IntegerArgumentType.integer())
-					.then(argument("y", IntegerArgumentType.integer())
-						.then(argument("z", IntegerArgumentType.integer())
-							.executes(context -> {
-								ClientPlayerEntity player = MinecraftClient.getInstance().player;
-								RegistryKey<World> dimension = player.getWorld().getRegistryKey();
+							BlockPos position = coordinateHelper.getCurrentPosition();
+							RegistryKey<World> dimension = MinecraftClient.getInstance().player.getWorld().getRegistryKey();
 
-								BlockPos position = new BlockPos(
-										IntegerArgumentType.getInteger(context, "x"),
-										IntegerArgumentType.getInteger(context, "y"),
-										IntegerArgumentType.getInteger(context, "z")
-								);
+							context.getSource().sendFeedback(copyableText(format(getReverseCords(position, dimension)), 0xcc9900));
+							return 1;
+						})
+						.then(argument("x", IntegerArgumentType.integer())
+								.then(argument("y", IntegerArgumentType.integer())
+										.then(argument("z", IntegerArgumentType.integer())
+												.executes(context -> {
+													BlockPos position = new BlockPos(
+															IntegerArgumentType.getInteger(context, "x"),
+															IntegerArgumentType.getInteger(context, "y"),
+															IntegerArgumentType.getInteger(context, "z")
+													);
 
-								context.getSource().sendFeedback(copyableText(format(getReverseCords(position, dimension)), 0xcc9900));
-								return 1;
-							})
+													context.getSource().sendFeedback(copyableText(format(getReverseCords(position, World.NETHER)), 0xcc9900));
+													return 1;
+												})
+										)
+								)
 						)
-					)
 				)
-			)
-		));
+				.then(literal("point")
+						.executes(context -> {
+							BlockPos position = coordinateHelper.getPlayerPosition();
+							if (coordinateHelper.point1 == null) {
+								coordinateHelper.point1 = position;
+							} else {
+								coordinateHelper.point2 = position;
+								context.getSource().sendFeedback(copyableText(String.valueOf(coordinateHelper.pointDistance()) + " blocks away", 0xffffff));
+
+								coordinateHelper.clearPoints();
+							}
+							return 1;
+						})
+				)
+		);
 	}
 
 	private MutableText copyableText(String text, int color) {

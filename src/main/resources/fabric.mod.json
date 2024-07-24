@@ -5,7 +5,7 @@
 	"name": "CoordinateCommands",
 	"description": "This is an example description! Tell everyone what your mod is about!",
 	"authors": [
-		"Me!"
+		"Shringe_"
 	],
 	"contact": {
 		"homepage": "https://fabricmc.net/",
@@ -15,8 +15,10 @@
 	"icon": "assets/coordinatecommands/icon.png",
 	"environment": "*",
 	"entrypoints": {
-		"client": [
-          "com.github.coordinatecommands.CoordinateCommands"
+		"modmenu": [
+			"com.github.coordinatecommands.ModMenuIntegration"
+		], "client": [
+			"com.github.coordinatecommands.CoordinateCommands"
 		]
 	},
 	"depends": {
