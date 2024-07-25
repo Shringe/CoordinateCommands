@@ -23,7 +23,8 @@ import static net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.lit
 import static net.minecraft.text.ClickEvent.Action.COPY_TO_CLIPBOARD;
 
 public class CoordinateCommands implements ClientModInitializer {
-	public static final Logger LOGGER = LoggerFactory.getLogger("coordinatecommands");
+	public static final String MOD_ID = "coordinatecommands";
+	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 	public static ModConfig config;
 	private final CoordinateHelper coordinateHelper = new CoordinateHelper();
 
