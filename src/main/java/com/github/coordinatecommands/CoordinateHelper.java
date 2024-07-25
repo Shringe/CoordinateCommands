@@ -1,12 +1,9 @@
 package com.github.coordinatecommands;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 
 public class CoordinateHelper {
-    public ClientPlayerEntity player;
-
     private BlockPos lastPosition;
     private BlockPos currentPosition;
     public BlockPos point1;
@@ -30,7 +27,7 @@ public class CoordinateHelper {
     }
 
     public BlockPos getPlayerPosition() {
-        return player.getBlockPos();
+        return MinecraftClient.getInstance().player.getBlockPos();
     }
 
     public double pointDistance() {

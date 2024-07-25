@@ -9,7 +9,6 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource;
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.command.CommandRegistryAccess;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.text.*;
@@ -39,20 +38,6 @@ public class CoordinateCommands implements ClientModInitializer {
 	}
 
 	private void initializeCommands(CommandDispatcher<FabricClientCommandSource> dispatcher, CommandRegistryAccess registryAccess) {
-		LOGGER.info("Initializing commands");
-		if (coordinateHelper.player == null) {
-			LOGGER.debug("coordinateHelper.player is null");
-			ClientPlayerEntity player = MinecraftClient.getInstance().player;
-			if (player == null) {
-				LOGGER.debug("MinecraftClient.getInstance().player is null. returning");
-				return;
-			} else {
-				LOGGER.info("Player Initialized");
-				coordinateHelper.player = player;
-			}
-		}
-
-
 		dispatcher.register(literal("coords")
 				.executes(context -> {
 					coordinateHelper.setPlayerPosition();
@@ -152,16 +137,6 @@ public class CoordinateCommands implements ClientModInitializer {
 								context.getSource().sendFeedback(copyableText(String.valueOf(coordinateHelper.pointDistance()) + " blocks away", 0xffffff));
 
 								coordinateHelper.clearPoints();
-							}
-							return 1;
-						})
-				)
-				.then(literal("debug")
-						.executes(context -> {
-							if (coordinateHelper.player == null) {
-								context.getSource().sendFeedback(Text.literal("Player is null"));
-							} else {
-								context.getSource().sendFeedback(Text.literal("Player is not null"));
 							}
 							return 1;
 						})
