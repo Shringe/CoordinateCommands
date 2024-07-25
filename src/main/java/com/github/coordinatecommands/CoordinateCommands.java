@@ -49,7 +49,6 @@ public class CoordinateCommands implements ClientModInitializer {
 			} else {
 				LOGGER.info("Player Initialized");
 				coordinateHelper.player = player;
-				coordinateHelper.getPlayerPosition();
 			}
 		}
 
@@ -153,6 +152,16 @@ public class CoordinateCommands implements ClientModInitializer {
 								context.getSource().sendFeedback(copyableText(String.valueOf(coordinateHelper.pointDistance()) + " blocks away", 0xffffff));
 
 								coordinateHelper.clearPoints();
+							}
+							return 1;
+						})
+				)
+				.then(literal("debug")
+						.executes(context -> {
+							if (coordinateHelper.player == null) {
+								context.getSource().sendFeedback(Text.literal("Player is null"));
+							} else {
+								context.getSource().sendFeedback(Text.literal("Player is not null"));
 							}
 							return 1;
 						})
